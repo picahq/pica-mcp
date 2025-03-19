@@ -2,6 +2,10 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](https://picaos.com), built in TypeScript.
 
+Setup Video: https://youtu.be/JJ62NUEkKAs
+
+Demo Video: https://youtu.be/0jeasO20PyM
+
 ## Development
 
 Install dependencies:
