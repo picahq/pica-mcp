@@ -61,12 +61,8 @@ class PicaClient {
 
   private async initializeConnections() {
     try {
-      const headers = this.generateHeaders();
-      const url = `${this.baseUrl}/v1/vault/connections?limit=300`;
-      const response = await axios.get(url, { headers });
-      this.connections = response.data?.rows || [];
+      await this.refreshConnections();
     } catch (error) {
-      console.error("Failed to initialize connections:", error);
       this.connections = [];
     }
   }
@@ -89,6 +85,19 @@ class PicaClient {
 
   getConnectionDefinitions() {
     return this.connectionDefinitions;
+  }
+
+  async refreshConnections() {
+    try {
+      const headers = this.generateHeaders();
+      const url = `${this.baseUrl}/v1/vault/connections?limit=300`;
+      const response = await axios.get(url, { headers });
+      this.connections = response.data?.rows || [];
+      return this.connections;
+    } catch (error) {
+      console.error("Failed to fetch connections:", error);
+      return this.connections;
+    }
   }
 
   async getAvailableActions(platform: string) {
@@ -392,6 +401,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (request.params.name) {
     case "list_connections": {
+      await picaClient.refreshConnections();
       const connections = picaClient.getConnections();
       const activeConnections = connections.filter(conn => conn.active);
 
