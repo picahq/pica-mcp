@@ -2,6 +2,8 @@
 
 ![Pica MCP Banner](https://assets.picaos.com/github/mcp.jpeg)
 
+[![smithery badge](https://smithery.ai/badge/@picahq/pica)](https://smithery.ai/server/@picahq/pica)
+
 A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](https://picaos.com), built in TypeScript.
 
 **Setup Video:** https://youtu.be/JJ62NUEkKAs
@@ -13,6 +15,14 @@ A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](ht
 The Model Context Protocol (MCP) is a system that lets AI apps, like [Claude Desktop](https://claude.ai/download), connect to external tools and data sources. It gives a clear and safe way for AI assistants to work with local services and APIs while keeping the user in control.
 
 ## Installation 🛠️
+
+### Installing via Smithery
+
+To install pica for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@picahq/pica):
+
+```bash
+npx -y @smithery/cli install @picahq/pica --client claude
+```
 
 ### Environment Setup
 

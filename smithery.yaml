@@ -1,0 +1,25 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - picaSecret
+    properties:
+      picaSecret:
+        type: string
+        description: Your Pica API secret key to authenticate requests
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        PICA_SECRET: config.picaSecret
+      }
+    })
+  exampleConfig:
+    picaSecret: example_secret_key
