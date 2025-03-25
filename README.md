@@ -12,7 +12,40 @@ A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](ht
 
 ## What is MCP?
 
-The Model Context Protocol (MCP) is a system that lets AI apps, like [Claude Desktop](https://claude.ai/download), connect to external tools and data sources. It gives a clear and safe way for AI assistants to work with local services and APIs while keeping the user in control.
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io) is a system that lets AI apps, like [Claude Desktop](https://claude.ai/download), connect to external tools and data sources. It gives a clear and safe way for AI assistants to work with local services and APIs while keeping the user in control.
+
+## What is Pica?
+
+[Pica](https://picaos.com) is a powerful agentic tooling platform that enables connections to 70+ third-party services and applications. This MCP server allows Claude Desktop and anything using the [Model Context Protocol](https://modelcontextprotocol.io) to securely interact with all these connections through natural language requests.
+
+With Pica MCP Server, you can:
+
+- **Access Multiple Data Sources**: Query databases, fetch files, and retrieve information across services
+- **Automate Workflows**: Trigger actions and automate tasks across your connected platforms
+- **Enhance LLM Capabilities**: Give Claude Desktop powerful real-world capabilities through API access
+
+### Supported Connections
+
+Pica supports [70+ connections](https://app.picaos.com/tools) (with more added regularly) across categories like:
+
+#### Communication & Collaboration
+- Gmail, Outlook Mail, Slack, Teams, SendGrid
+- Notion, Google Drive, Dropbox, OneDrive
+
+#### Data & Analytics
+- PostgreSQL, BigQuery, Supabase
+- Google Sheets, Airtable
+
+#### Business & CRM
+- Salesforce, HubSpot, Pipedrive, Zoho
+- Zendesk, Freshdesk, Intercom
+
+#### AI & ML Services
+- OpenAI, Anthropic, Gemini, ElevenLabs
+
+#### E-commerce & Financial
+- Shopify, BigCommerce, Square, Stripe
+- QuickBooks, Xero, NetSuite
 
 ## Installation 🛠️
 
@@ -127,12 +160,29 @@ The Inspector will provide a URL to access debugging tools in your browser.
 
 Once you've added the server config and connected some platforms in the [Pica dashboard](https://app.picaos.com/connections), restart Claude Desktop and try out some examples:
 
-- What connections do I have access to?
-- Send an email using gmail to hello@picaos.com
-- What actions can I perform with google sheets?
-- Create an event in my calendar
-- List 5 users from my postgres users table
-- Send a message in slack to the #general channel with today's weather
+### Communication & Productivity
+- Send an email using Gmail to a colleague with a meeting summary
+- Create a calendar event in Google Calendar for next Tuesday at 2pm
+- Send a message in Slack to the #marketing channel with the latest campaign metrics
+- Find documents in Google Drive related to Q3 planning
+
+### Data Access & Analysis
+- List the top 10 customers from my PostgreSQL database
+- Create a new sheet in Google Sheets with sales data
+- Query Salesforce for opportunities closing this month
+- Update a Notion database with project statuses
+
+### Business Operations
+- Create a support ticket in Zendesk from customer feedback
+- Process a refund for a customer order in Stripe
+- Add a new lead to HubSpot from a website inquiry
+- Generate an invoice in QuickBooks for a client project
+
+### AI & Content
+- Generate an image with DALL-E based on product specifications
+- Transcribe a meeting recording with ElevenLabs
+- Research market trends using Tavily or SerpApi
+- Analyze customer sentiment from support tickets
 
 Got any cool examples? [Open a PR](https://github.com/picahq/awesome-pica) and share them!
 
