@@ -49,6 +49,20 @@ Pica supports [70+ connections](https://app.picaos.com/tools) (with more added r
 
 ## Installation 🛠️
 
+### Using npx
+
+You can use this package directly with npx:
+
+```bash
+npx @picahq/pica-mcp
+```
+
+Or install it globally:
+
+```bash
+npm install -g @picahq/pica-mcp
+```
+
 ### Installing via Smithery
 
 To install pica for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@picahq/pica):

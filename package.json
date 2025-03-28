@@ -1,11 +1,10 @@
 {
-  "name": "pica-mcp-server",
-  "version": "1.0.0",
+  "name": "@picahq/pica-mcp",
+  "version": "1.0.1",
   "description": "A Model Context Protocol Server for Pica",
-  "private": true,
   "type": "module",
   "bin": {
-    "pica-mcp-server": "./build/index.js"
+    "pica-mcp": "./build/index.js"
   },
   "files": [
     "build"
