@@ -6,6 +6,10 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](https://picaos.com), built in TypeScript.
 
+<a href="https://glama.ai/mcp/servers/@picahq/mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@picahq/mcp-server/badge" alt="Pica Server MCP server" />
+</a>
+
 **Setup Video:** https://youtu.be/JJ62NUEkKAs
 
 **Demo Video:** https://youtu.be/0jeasO20PyM
@@ -113,7 +117,6 @@ npm run watch
 ```
 
 ### Using Claude Desktop
-
 
 To use with [Claude Desktop](https://claude.ai/download), add the server config:
 
