@@ -26,12 +26,23 @@ interface Connection {
 }
 
 interface ConnectionDefinition {
+  name: string;
+  key: string;
   platform: string;
-  frontend: {
-    spec: {
-      title: string;
-    }
-  }
+  platformVersion: string;
+  description: string;
+  category: string;
+  image: string;
+  tags: string[];
+  oauth: boolean;
+  createdAt: number;
+  updatedAt: number;
+  updated: boolean;
+  version: string;
+  lastModifiedBy: string;
+  deleted: boolean;
+  active: boolean;
+  deprecated: boolean;
 }
 
 class PicaClient {
@@ -70,7 +81,7 @@ class PicaClient {
   private async initializeConnectionDefinitions() {
     try {
       const headers = this.generateHeaders();
-      const url = `${this.baseUrl}/v1/public/connection-definitions?limit=500`;
+      const url = `${this.baseUrl}/v1/available-connectors?limit=500`;
       const response = await axios.get(url, { headers });
       this.connectionDefinitions = response.data?.rows || [];
     } catch (error) {
@@ -306,8 +317,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "list_connections",
-        description: "List all available active connections in the user's Pica account",
+        name: "list_user_connections_and_available_connectors",
+        description: "List all available connectors offered by Pica and connections in the user's Pica account",
         inputSchema: {
           type: "object",
           properties: {},
@@ -400,10 +411,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   await initializePica();
 
   switch (request.params.name) {
-    case "list_connections": {
+    case "list_user_connections_and_available_connectors": {
       await picaClient.refreshConnections();
       const connections = picaClient.getConnections();
       const activeConnections = connections.filter(conn => conn.active);
+
+      const availableConnectors = picaClient.getConnectionDefinitions();
 
       return {
         content: [{
@@ -414,6 +427,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               key: conn.key,
               platform: conn.platform,
               active: conn.active
+            })),
+            availablePicaConnectors: availableConnectors.map(connector => ({
+              title: connector.name,
+              platform: connector.platform,
+              image: connector.image
             })),
             message: `Found ${activeConnections.length} active connections in your Pica account.`
           }, null, 2)
