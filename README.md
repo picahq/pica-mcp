@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/@picahq/pica)](https://smithery.ai/server/@picahq/pica)
 
-![Pica MCP Banner](https://assets.picaos.com/github/mcp.jpeg)
+![Pica MCP Banner](https://assets.picaos.com/git/pica-mcp.png)
 
 A [Model Context Protocol](https://modelcontextprotocol.io) Server for [Pica](https://picaos.com), built in TypeScript.
 
