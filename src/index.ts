@@ -14,6 +14,38 @@ import {
 import axios from "axios";
 import FormData from 'form-data';
 
+// Helper functions for generating prompt context
+function formatConnectionsInfo(connections: Connection[]): string {
+  if (connections.length === 0) {
+    return "No active connections found. User needs to connect to platforms first.";
+  }
+  
+  const groupedByPlatform = connections.reduce((acc, conn) => {
+    if (!acc[conn.platform]) {
+      acc[conn.platform] = [];
+    }
+    acc[conn.platform].push(conn.key);
+    return acc;
+  }, {} as Record<string, string[]>);
+  
+  return Object.entries(groupedByPlatform)
+    .map(([platform, keys]) => `- ${platform}: ${keys.join(', ')}`)
+    .join('\n');
+}
+
+function formatAvailablePlatformsInfo(connectionDefinitions: ConnectionDefinition[]): string {
+  if (connectionDefinitions.length === 0) {
+    return "No available platform information found.";
+  }
+  
+  const platforms = connectionDefinitions
+    .filter(def => def.active && !def.deprecated)
+    .map(def => `- ${def.platform}: ${def.description}`)
+    .join('\n');
+    
+  return platforms || "No active platforms available.";
+}
+
 interface AvailableAction {
   _id: string;
   title: string;
@@ -879,7 +911,10 @@ try {
   console.log('Response:', response.data);
 } catch (error) {
   console.error('Error:', error.response?.data || error.message);
-}`;
+}
+
+IMPORTANT: For the Pica secret always use the environment variable PICA_SECRET.
+`;
 
         return {
           content: [{
@@ -946,12 +981,29 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
             required: true
           }
         ]
+      },
+      {
+        name: "knowledge-agent-system",
+        description: "System prompt with Pica Knowledge Agent capabilities for enhanced API guidance",
+        arguments: [
+          {
+            name: "includeEnvironmentVariables",
+            description: "Whether to include environment variable access in the prompt",
+            required: false
+          }
+        ]
+      },
+      {
+        name: "default-system",
+        description: "Basic system prompt with Pica Intelligence Tools",
+        arguments: []
       }
     ]
   };
 });
 
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  await initializePica();
   const { name, arguments: args } = request.params;
 
   switch (name) {
@@ -991,6 +1043,88 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
             content: {
               type: "text",
               text: `List all available actions for the ${platform} platform. Format the output as a categorized list with descriptions for each action.`
+            }
+          }
+        ]
+      };
+    }
+
+    case "knowledge-agent-system": {
+      const includeEnvironmentVariables = args?.includeEnvironmentVariables || false;
+      const connections = picaClient.getConnections().filter(conn => conn.active);
+      const connectionDefinitions = picaClient.getConnectionDefinitions();
+      
+      const connectionsInfo = formatConnectionsInfo(connections);
+      const availablePlatformsInfo = formatAvailablePlatformsInfo(connectionDefinitions);
+      
+      const envPrompt = includeEnvironmentVariables ? `
+
+ENVIRONMENT VARIABLES:
+You can access environment variables when needed for configuration or API keys.` : '';
+      
+      const systemPrompt = `You have access to Pica's Intelligence Tools with Knowledge Agent capabilities that can help you connect to various APIs and services.
+
+ACTIVE CONNECTIONS:
+${connectionsInfo}
+
+AVAILABLE PLATFORMS:
+${availablePlatformsInfo}${envPrompt}
+
+You can:
+1. Get available actions for any platform using getAvailableActions
+2. Get detailed knowledge about specific actions using getActionKnowledge  
+3. Generate request configurations (without executing) using execute
+
+As a Knowledge Agent, you have enhanced understanding of API documentation and can provide detailed guidance on using various platforms and their APIs.
+
+When using the execute tool, you will receive a TypeScript code block showing how to make the HTTP request using the Pica Passthrough API.
+
+Always check what connections are available before attempting to use them.`;
+
+      return {
+        messages: [
+          {
+            role: "system",
+            content: {
+              type: "text",
+              text: systemPrompt
+            }
+          }
+        ]
+      };
+    }
+
+    case "default-system": {
+      const connections = picaClient.getConnections().filter(conn => conn.active);
+      const connectionDefinitions = picaClient.getConnectionDefinitions();
+      
+      const connectionsInfo = formatConnectionsInfo(connections);
+      const availablePlatformsInfo = formatAvailablePlatformsInfo(connectionDefinitions);
+      
+      const systemPrompt = `You have access to Pica's Intelligence Tools that can help you connect to various APIs and services.
+
+ACTIVE CONNECTIONS:
+${connectionsInfo}
+
+AVAILABLE PLATFORMS:
+${availablePlatformsInfo}
+
+You can:
+1. Get available actions for any platform using getAvailableActions
+2. Get detailed knowledge about specific actions using getActionKnowledge  
+3. Generate request configurations (without executing) using execute
+
+When using the execute tool, you will receive a TypeScript code block showing how to make the HTTP request using the Pica Passthrough API.
+
+Always check what connections are available before attempting to use them.`;
+
+      return {
+        messages: [
+          {
+            role: "system",
+            content: {
+              type: "text",
+              text: systemPrompt
             }
           }
         ]
