@@ -20,22 +20,34 @@ npm install
 
 You need to set up your environment variables in Vercel. You can do this via the Vercel dashboard or CLI.
 
-#### Using Vercel CLI:
+#### Option 1: Using Vercel CLI (Recommended for first deployment):
+
+During your first deployment, Vercel will prompt you to set environment variables:
 
 ```bash
-vercel secrets add pica-secret "your-pica-secret-here"
-vercel secrets add pica-base-url "https://api.picaos.com"  # Optional, defaults to this URL
-vercel secrets add redis-url "your-redis-connection-url"  # Required for SSE transport
+vercel
+# When prompted for environment variables, enter:
+# PICA_SECRET: your-pica-secret-here
+# PICA_BASE_URL: https://api.picaos.com (or press Enter to use default)
 ```
 
-#### Using Vercel Dashboard:
+#### Option 2: Using Vercel Dashboard:
 
-1. Go to your project settings in Vercel
+1. Go to your project settings in Vercel (after first deployment)
 2. Navigate to "Environment Variables"
 3. Add the following variables:
    - `PICA_SECRET`: Your Pica API secret key (required)
    - `PICA_BASE_URL`: The Pica API base URL (optional, defaults to https://api.picaos.com)
-   - `REDIS_URL`: Redis connection URL (required for SSE transport)
+
+#### Option 3: Using Vercel CLI with Environment Variables:
+
+```bash
+vercel env add PICA_SECRET
+# Enter your secret when prompted
+
+vercel env add PICA_BASE_URL  
+# Enter https://api.picaos.com or your custom URL
+```
 
 ### 3. Deploy to Vercel
 
@@ -59,10 +71,9 @@ vercel --prod
 
 ```
 pica-mcp/
-├── app/
-│   └── api/
-│       └── [transport]/
-│           └── route.ts    # Vercel serverless function entry point
+├── api/
+│   └── [transport]/
+│       └── route.ts       # Vercel serverless function entry point
 ├── src/
 │   └── index.ts           # Original MCP server (for local development)
 ├── package.json           # Dependencies
@@ -72,11 +83,11 @@ pica-mcp/
 
 ## How It Works
 
-- The `app/api/[transport]/route.ts` file uses the `@vercel/mcp-adapter` to wrap your MCP server as a Vercel serverless function
-- The `[transport]` dynamic route automatically handles different MCP transport types (SSE, HTTP)
+- The `api/[transport]/route.ts` file uses the `@vercel/mcp-adapter` to wrap your MCP server as a Vercel serverless function
+- The `[transport]` dynamic route automatically handles different MCP transport types
 - All MCP tools, resources, and prompts are automatically exposed through the Vercel deployment
 - The server handles authentication using the `PICA_SECRET` environment variable
-- SSE transport is available at `/api/sse` and HTTP transport at `/api/mcp`
+- HTTP transport is available at `/api/mcp` (recommended for most use cases)
 
 ## Testing Your Deployment
 

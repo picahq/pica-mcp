@@ -60,9 +60,8 @@ You can deploy this MCP server to Vercel for remote access:
    ```
 
 3. Configure your MCP client to use the remote server:
-   - **For Cursor (SSE)**: `https://your-project.vercel.app/api/sse`
-   - **For Cursor (HTTP)**: `https://your-project.vercel.app/api/mcp`
-   - **For Claude/Cline**: Use `npx mcp-remote` with the appropriate URL
+   - **For Cursor**: `https://your-project.vercel.app/api/mcp`
+   - **For Claude/Cline**: Use `npx mcp-remote https://your-project.vercel.app/api/mcp`
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Vercel deployment instructions.
 
