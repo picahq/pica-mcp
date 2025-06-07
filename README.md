@@ -43,6 +43,29 @@ graph TB
 npm install @picahq/pica-mcp
 ```
 
+## Deployment Options
+
+### Deploy to Vercel
+
+You can deploy this MCP server to Vercel for remote access:
+
+1. Install dependencies including Vercel adapter:
+   ```bash
+   npm install @vercel/mcp-adapter zod
+   ```
+
+2. Deploy to Vercel:
+   ```bash
+   vercel
+   ```
+
+3. Configure your MCP client to use the remote server:
+   - **For Cursor (SSE)**: `https://your-project.vercel.app/api/sse`
+   - **For Cursor (HTTP)**: `https://your-project.vercel.app/api/mcp`
+   - **For Claude/Cline**: Use `npx mcp-remote` with the appropriate URL
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Vercel deployment instructions.
+
 ## Configuration
 
 Set the following environment variables:

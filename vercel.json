@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "app/api/[transport]/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "PICA_SECRET": "@pica-secret",
+    "PICA_BASE_URL": "@pica-base-url"
+  }
+} 
