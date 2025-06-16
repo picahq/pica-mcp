@@ -19,7 +19,7 @@ function formatConnectionsInfo(connections: Connection[]): string {
   if (connections.length === 0) {
     return "No active connections found. User needs to connect to platforms first.";
   }
-  
+
   const groupedByPlatform = connections.reduce((acc, conn) => {
     if (!acc[conn.platform]) {
       acc[conn.platform] = [];
@@ -27,7 +27,7 @@ function formatConnectionsInfo(connections: Connection[]): string {
     acc[conn.platform].push(conn.key);
     return acc;
   }, {} as Record<string, string[]>);
-  
+
   return Object.entries(groupedByPlatform)
     .map(([platform, keys]) => `- ${platform}: ${keys.join(', ')}`)
     .join('\n');
@@ -37,12 +37,12 @@ function formatAvailablePlatformsInfo(connectionDefinitions: ConnectionDefinitio
   if (connectionDefinitions.length === 0) {
     return "No available platform information found.";
   }
-  
+
   const platforms = connectionDefinitions
     .filter(def => def.active && !def.deprecated)
     .map(def => `- ${def.platform}: ${def.description}`)
     .join('\n');
-    
+
   return platforms || "No active platforms available.";
 }
 
@@ -151,7 +151,7 @@ class PicaClient {
     if (!platform) {
       throw new Error("Platform name is required");
     }
-    
+
     try {
       const headers = this.generateHeaders();
       const url = `${this.baseUrl}/v1/knowledge?supported=true&connectionPlatform=${encodeURIComponent(platform)}&limit=1000`;
@@ -170,7 +170,7 @@ class PicaClient {
     if (!actionId) {
       throw new Error("Action ID is required");
     }
-    
+
     try {
       const headers = this.generateHeaders();
       const url = `${this.baseUrl}/v1/knowledge?_id=${encodeURIComponent(actionId)}`;
@@ -192,7 +192,7 @@ class PicaClient {
 
   public replacePathVariables(path: string, variables: Record<string, string | number | boolean>): string {
     if (!path) return path;
-    
+
     return path.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
       const trimmedVariable = variable.trim();
       const value = variables[trimmedVariable];
@@ -393,11 +393,11 @@ const initializePica = async () => {
   if (picaInitialized) {
     return;
   }
-  
+
   if (initializationPromise) {
     return initializationPromise;
   }
-  
+
   initializationPromise = (async () => {
     try {
       await picaClient.initialize();
@@ -410,7 +410,7 @@ const initializePica = async () => {
       throw error;
     }
   })();
-  
+
   return initializationPromise;
 };
 
@@ -418,7 +418,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
   await initializePica();
 
   const resources = [];
-  
+
   // Add connections as resources
   const connections = picaClient.getConnections();
   for (const connection of connections) {
@@ -493,7 +493,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const actionId = url.hostname;
     try {
       const action = await picaClient.getActionKnowledge(actionId);
-      
+
       return {
         contents: [{
           uri: request.params.uri,
@@ -1053,15 +1053,15 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
       const includeEnvironmentVariables = args?.includeEnvironmentVariables || false;
       const connections = picaClient.getConnections().filter(conn => conn.active);
       const connectionDefinitions = picaClient.getConnectionDefinitions();
-      
+
       const connectionsInfo = formatConnectionsInfo(connections);
       const availablePlatformsInfo = formatAvailablePlatformsInfo(connectionDefinitions);
-      
+
       const envPrompt = includeEnvironmentVariables ? `
 
 ENVIRONMENT VARIABLES:
 You can access environment variables when needed for configuration or API keys.` : '';
-      
+
       const systemPrompt = `You have access to Pica's Intelligence Tools with Knowledge Agent capabilities that can help you connect to various APIs and services.
 
 ACTIVE CONNECTIONS:
@@ -1097,10 +1097,10 @@ Always check what connections are available before attempting to use them.`;
     case "default-system": {
       const connections = picaClient.getConnections().filter(conn => conn.active);
       const connectionDefinitions = picaClient.getConnectionDefinitions();
-      
+
       const connectionsInfo = formatConnectionsInfo(connections);
       const availablePlatformsInfo = formatAvailablePlatformsInfo(connectionDefinitions);
-      
+
       const systemPrompt = `You have access to Pica's Intelligence Tools that can help you connect to various APIs and services.
 
 ACTIVE CONNECTIONS:
@@ -1138,7 +1138,7 @@ Always check what connections are available before attempting to use them.`;
 
 server.setRequestHandler(CreateMessageRequestSchema, async (request) => {
   const { messages, modelPreferences } = request.params;
-  
+
   // Extract context from the conversation
   const lastMessage = messages[messages.length - 1];
   if (!lastMessage || lastMessage.role !== 'user') {
@@ -1157,11 +1157,11 @@ server.setRequestHandler(CreateMessageRequestSchema, async (request) => {
     // Extract platform and action from context
     const platformMatch = content.match(/(?:for|using)\s+(\w+)/i);
     const actionMatch = content.match(/(?:to|for)\s+(.+?)(?:\.|$)/i);
-    
+
     if (platformMatch && actionMatch) {
       const platform = platformMatch[1];
       const action = actionMatch[1];
-      
+
       return {
         model: modelPreferences?.hints?.find(h => h.name === 'model')?.value || 'claude-3',
         role: 'assistant',
@@ -1189,7 +1189,7 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("Pica MCP server running on stdio");
-    
+
     // Log debug info if requested
     if (process.env.DEBUG === 'true') {
       console.error("Debug mode enabled");
