@@ -1,41 +1,53 @@
 # Pica MCP Server
 
-A Model Context Protocol (MCP) server that integrates with the Pica API platform, enabling seamless interaction with various third-party services through a standardized interface.
+[![smithery badge](https://smithery.ai/badge/@picahq/pica)](https://smithery.ai/server/@picahq/pica)
+
+<img src="https://assets.picaos.com/github/pica-mcp.svg" alt="Pica MCP Banner" style="border-radius: 5px;">
+
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io)  server that integrates with the Pica API platform, enabling seamless interaction with various third-party services through a standardized interface. Features enhanced intent detection, improved security, and robust code generation capabilities.
+
+**Setup Video:** https://youtu.be/JJ62NUEkKAs
+
+**Demo Video:** https://youtu.be/0jeasO20PyM
 
 ## Features
 
 ### 🔧 Tools
 - **list_user_connections_and_available_connectors** - List all available connectors and active connections
 - **get_available_actions** - Get available actions for a specific platform
-- **get_action_knowledge** - Get detailed information about a specific action
-- **execute_action** - Execute API actions with full parameter support
-- **generate_action_config_knowledge** - Generate request configurations for code generation
+- **get_action_knowledge** - Get detailed information about a specific action including API documentation
+- **execute_action** - Execute API actions immediately with full parameter support
+- **generate_action_config_knowledge** - Generate secure, production-ready request configurations for code integration
 
 ### 📚 Resources
 - **pica-platform://{platform}** - Browse available actions for a platform
 - **pica-connection://{platform}/{key}** - View connection details
-- **pica-action://{actionId}** - Get detailed action information
+- **pica-action://{actionId}** - Get detailed action information with knowledge base
 
-### 💬 Prompts
-- **create-api-integration** - Generate code for API integrations
-- **list-platform-actions** - Get formatted lists of platform actions
+## Key Capabilities
 
-### 🤖 Sampling
-The server supports the MCP sampling capability for generating contextual responses based on conversation history.
+### 🎯 **Smart Intent Detection**
+The server automatically detects whether you want to:
+- **Execute actions immediately**: "read my emails", "send this message now"
+- **Generate integration code**: "write code to send emails", "create a UI for messaging"
 
-## Architecture
+### 🔒 **Enhanced Security**
+- Never exposes secrets in generated code
+- Uses environment variables: `PICA_SECRET`, `PICA_[PLATFORM]_CONNECTION_KEY`
+- Sanitized request configurations for production use
 
-```mermaid
-graph TB
-    Client["MCP Client<br/>(Claude, VS Code, etc.)"]
-    Server["Pica MCP Server"]
-    Transport["StdioServerTransport"]
-    PicaAPI["Pica API"]
-    
-    Client <-->|"JSON-RPC<br/>over stdio"| Transport
-    Transport <--> Server
-    Server -->|"HTTP/REST"| PicaAPI
-```
+### 🌐 **Multi-Language Support**
+Generate production-ready code in:
+- TypeScript/JavaScript
+- Python
+- Go, PHP, and more
+- Auto-detects language from context or asks user
+
+### ⚡ **Production-Ready Code Generation**
+- Real, working HTTP requests (no demo code)
+- Proper error handling and type definitions
+- Clean, maintainable code structure
+- Environment variable best practices
 
 ## Installation
 
@@ -65,40 +77,21 @@ You can deploy this MCP server to Vercel for remote access:
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Vercel deployment instructions.
 
-## Configuration
-
-Set the following environment variables:
-
-```bash
-# Required
-export PICA_SECRET="your-pica-secret-key"
-
-# Optional
-export PICA_BASE_URL="https://api.picaos.com"  # Default
-export DEBUG="true"  # Enable debug logging
-```
-
 ## Usage
 
 ### As a Standalone Server
 
 ```bash
-# Using npx
 npx @picahq/pica-mcp
-
-# Or if installed globally
-pica-mcp
-```
-
-### With MCP Inspector
-
-```bash
-npm run inspector
 ```
 
 ### In Claude Desktop
 
-Add to your Claude configuration file:
+To use with [Claude Desktop](https://claude.ai/download), add the server config:
+
+On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
+
+On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -114,123 +107,111 @@ Add to your Claude configuration file:
 }
 ```
 
-## Examples
+### In Cursor
 
-### List Available Connections
+In the Cursor menu, select "MCP Settings" and update the MCP JSON file to include the following:
 
-```typescript
-// Using the list_user_connections_and_available_connectors tool
-const result = await client.callTool({
-  name: "list_user_connections_and_available_connectors"
-});
-```
-
-### Get Platform Actions
-
-```typescript
-// Using the get_available_actions tool
-const actions = await client.callTool({
-  name: "get_available_actions",
-  arguments: {
-    platform: "slack"
-  }
-});
-```
-
-### Execute an Action
-
-```typescript
-// Using the execute_action tool
-const result = await client.callTool({
-  name: "execute_action",
-  arguments: {
-    actionId: "action-id",
-    connectionKey: "connection-key",
-    method: "POST",
-    path: "/api/messages",
-    data: {
-      channel: "#general",
-      text: "Hello from MCP!"
+```json
+{
+  "mcpServers": {
+    "pica": {
+      "command": "npx",
+      "args": ["@picahq/pica-mcp"],
+      "env": {
+        "PICA_SECRET": "your-pica-secret-key"
+      }
     }
   }
-});
+}
 ```
 
-### Generate Integration Code
+### Using Docker
 
-```typescript
-// Using the generate_action_config_knowledge tool
-const config = await client.callTool({
-  name: "generate_action_config_knowledge",
-  arguments: {
-    platform: "slack",
-    action: {
-      _id: "send-message",
-      path: "/api/messages"
-    },
-    method: "POST",
-    connectionKey: "slack-connection-key",
-    data: {
-      channel: "#general",
-      text: "Hello!"
-    }
-  }
-});
-```
-
-## Development
-
-### Building
+Build the Docker Image:
 
 ```bash
-npm run build
+docker build -t pica-mcp-server .
 ```
 
-### Watching for Changes
+Run the Docker Container:
 
 ```bash
-npm run watch
+docker run -e PICA_SECRET=your_pica_secret_key pica-mcp-server
 ```
 
-### Running with Debug Mode
+### Installing via Smithery
+
+To install pica for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@picahq/pica):
 
 ```bash
-DEBUG=true npm run build && node build/index.js
+npx -y @smithery/cli install @picahq/pica --client claude
+```
+
+## Usage Examples
+
+### 🚀 **Execute Actions Immediately**
+
+**Natural Language:**
+> "Read my last 5 emails from Gmail"
+
+**What happens:**
+1. Server detects execution intent
+2. Finds Gmail connection
+3. Executes action immediately
+4. Returns actual email data
+
+### 🔧 **Generate Integration Code**
+
+**Natural Language:**
+> "Create a React UI and write the code to send emails using Gmail"
+
+**What happens:**
+1. Server detects code generation intent
+2. Gets Gmail send email action knowledge
+3. Generates sanitized request configuration
+4. AI creates production-ready React + API code
+5. Uses environment variables for security
+
+## Intent Detection Guide
+
+The server automatically detects your intent based on natural language:
+
+### ✅ **Execute Immediately**
+- "Read my emails"
+- "Send this message now" 
+- "Get my GitHub repositories"
+- "Create a new Slack channel"
+- "Delete this file"
+
+### ✅ **Generate Code**
+- "Write code to read emails"
+- "Create a UI for messaging"
+- "Build an app that syncs data"
+- "Show me how to implement this"
+- "Generate integration code"
+
+### ❓ **When Unclear**
+The server will ask: *"Would you like me to execute this action now, or generate code for you to use?"*
+
+### 🔐 **Required Environment Variables**
+```bash
+# Always required
+PICA_SECRET=your-pica-secret-key
+
+# Required when generating code for specific platforms
+PICA_GMAIL_CONNECTION_KEY=your-gmail-connection-key
+PICA_SLACK_CONNECTION_KEY=your-slack-connection-key
+# etc.
 ```
 
 ## API Reference
 
 ### Tools
 
-#### list_user_connections_and_available_connectors
-Lists all connections in the user's Pica account and available connectors.
-
-**Parameters:** None
-
-**Returns:**
-- `connections`: Array of active connections
-- `availablePicaConnectors`: Array of available connectors
-
-#### get_available_actions
-Get available actions for a specific platform.
-
-**Parameters:**
-- `platform` (string, required): Platform name
-
-**Returns:**
-- `actions`: Array of available actions with id, title, and tags
-
-#### get_action_knowledge
-Get detailed information about a specific action.
-
-**Parameters:**
-- `actionId` (string, required): Action ID
-
-**Returns:**
-- `action`: Detailed action information including knowledge base
-
 #### execute_action
-Execute a specific action through the Pica API.
+Execute a specific action immediately and return actual results. Use ONLY when the user wants immediate action execution.
+
+**When to use:** "send this email now", "get my data", "create this item"
 
 **Parameters:**
 - `actionId` (string, required): Action ID
@@ -238,73 +219,66 @@ Execute a specific action through the Pica API.
 - `method` (string, required): HTTP method
 - `path` (string, required): API path
 - `data` (object, optional): Request body
-- `pathVariables` (object, optional): Path variables
+- `pathVariables` (object, optional): Path variables for URL templating
 - `queryParams` (object, optional): Query parameters
 - `headers` (object, optional): Additional headers
 - `isFormData` (boolean, optional): Send as multipart/form-data
 - `isFormUrlEncoded` (boolean, optional): Send as URL-encoded
 
 **Returns:**
-- `result`: API response data
-- `requestConfig`: Request configuration details
+- `result`: Actual API response data
+- `requestConfig`: Sanitized request configuration (no secrets)
 
 #### generate_action_config_knowledge
-Generate request configuration for code generation.
+Generate secure request configuration for building real integration code. Use when the user wants to build apps, write code, or create integrations.
+
+**When to use:** "write code", "build an app", "create a UI", "show me how to implement"
 
 **Parameters:**
 - `platform` (string, required): Platform name
 - `action` (object, required): Action object with _id and path
 - `method` (string, required): HTTP method
 - `connectionKey` (string, required): Connection key
+- `language` (string, optional): Programming language
 - `data` (object, optional): Request body
-- `pathVariables` (object, optional): Path variables
+- `pathVariables` (object, optional): Path variables for URL templating
 - `queryParams` (object, optional): Query parameters
 - `headers` (object, optional): Additional headers
 - `isFormData` (boolean, optional): Send as multipart/form-data
 - `isFormUrlEncoded` (boolean, optional): Send as URL-encoded
 
 **Returns:**
-- `requestConfig`: Complete request configuration
-- `typeScriptCode`: Example TypeScript code
-
-### Resources
-
-Resources can be read using the MCP resource protocol:
-
-- `pica-platform://{platform}` - List of actions for a platform
-- `pica-connection://{platform}/{key}` - Connection details
-- `pica-action://{actionId}` - Detailed action information
-
-### Prompts
-
-#### create-api-integration
-Generate code for API integrations.
-
-**Arguments:**
-- `platform` (string, required): Target platform
-- `action` (string, required): Action to perform
-- `language` (string, optional): Programming language (default: "typescript")
-
-#### list-platform-actions
-Get a formatted list of available actions.
-
-**Arguments:**
-- `platform` (string, required): Target platform
+- `requestConfig`: Sanitized request configuration with environment variables
+- `environmentVariables`: Required environment variables and descriptions
+- `actionKnowledge`: API documentation and parameter details
+- `codeGenerationInstructions`: Guidelines for creating production code
+- `exampleUsage`: Code structure example
 
 ## Error Handling
 
 The server implements comprehensive error handling:
 
-- Connection validation before action execution
-- Path variable validation and substitution
-- Graceful handling of API failures
-- Detailed error messages for debugging
+- ✅ Connection validation before action execution
+- ✅ Path variable validation and substitution  
+- ✅ Missing parameter detection with helpful error messages
+- ✅ Graceful handling of API failures
+- ✅ Detailed error messages for debugging
+- ✅ Security validation for generated configurations
 
 ## Security
 
-- API keys are passed via environment variables
-- Connections are validated before use
-- All requests include proper authentication headers
+- 🔐 API keys passed via environment variables only
+- 🛡️ Connections validated before use
+- 🔒 All requests include proper authentication headers
+- 🚫 Secrets never exposed in generated code or responses
+- ✅ Request configurations sanitized for production use
+- ⚡ Platform-specific environment variable naming
+- 🔍 Sensitive headers filtered from responses
+- 🛡️ Input validation and sanitization
+- 🔐 Secure authentication patterns enforced
+- ❌ No hardcoded API keys or credentials
+- ✅ Production-ready code generation
+- 🔒 Environment variable validation on startup
 
 ## License
 
