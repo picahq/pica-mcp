@@ -364,7 +364,7 @@ class PicaClient {
 const server = new Server(
   {
     name: "pica-mcp-server",
-    version: "0.1.0",
+    version: "2.0.0",
   },
   {
     capabilities: {
@@ -557,7 +557,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "execute_action",
-        description: "Prepare to execute a specific action (requires confirmation)",
+        description: "Execute a specific action immediately and return the actual results. Use this ONLY when the user wants immediate action execution (e.g., 'send this email now', 'get my data now').",
         inputSchema: {
           type: "object",
           properties: {
@@ -607,7 +607,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "generate_action_config_knowledge",
-        description: "Generate request configuration for an action using knowledge-based path handling, this is to be used when the user is asking you to write code.",
+        description: "Generate secure request configuration for building real integration code. Use this when the user wants to 'write code', 'build an app', 'create a UI', 'implement integration', etc. Returns sanitized config for production code generation.",
         inputSchema: {
           type: "object",
           properties: {
@@ -637,6 +637,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             connectionKey: {
               type: "string",
               description: "Key of the connection to use"
+            },
+            language: {
+              type: "string",
+              description: "Programming language for code generation (typescript, javascript, python, etc.). If not provided, ask the user."
             },
             data: {
               type: "object",
@@ -805,7 +809,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               requestConfig: {
                 method,
                 path,
-                headers: Object.keys(result.requestConfig.headers || {})
+                headers: Object.keys(result.requestConfig.headers || {}).filter(h =>
+                  !h.toLowerCase().includes('secret') && !h.toLowerCase().includes('authorization')
+                )
               }
             }, null, 2)
           }]
@@ -840,13 +846,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         queryParams,
         headers,
         isFormData,
-        isFormUrlEncoded
+        isFormUrlEncoded,
+        language
       } = request.params.arguments as any;
 
       try {
         // Check if connection exists
         const connections = picaClient.getConnections();
-        if (!connections.some(conn => conn.key === connectionKey)) {
+        const connection = connections.find(conn => conn.key === connectionKey);
+        if (!connection) {
           throw new Error(`Connection not found. Please add a ${platform} connection first.`);
         }
 
@@ -886,45 +894,61 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           resolvedPath = picaClient.replacePathVariables(action.path, finalPathVariables);
         }
 
-        const requestConfig = await picaClient.generateRequestConfig(
-          action._id,
-          connectionKey,
-          method,
-          resolvedPath,
-          finalData,
-          finalPathVariables,
-          queryParams,
-          headers,
-          isFormData,
-          isFormUrlEncoded
-        );
+        // Generate sanitized request config (without secrets)
+        const sanitizedRequestConfig = {
+          method: method.toUpperCase(),
+          url: `${PICA_BASE_URL}/v1/passthrough${resolvedPath.startsWith('/') ? resolvedPath : '/' + resolvedPath}`,
+          headers: {
+            'Content-Type': isFormData ? 'multipart/form-data' : isFormUrlEncoded ? 'application/x-www-form-urlencoded' : 'application/json',
+            'x-pica-secret': '${process.env.PICA_SECRET}',
+            'x-pica-connection-key': `\${process.env.PICA_${platform.toUpperCase()}_CONNECTION_KEY}`,
+            'x-pica-action-id': action._id,
+            ...headers
+          },
+          ...(queryParams && { params: queryParams }),
+          ...(finalData && method.toLowerCase() !== 'get' && { data: finalData })
+        };
 
-        // Generate TypeScript code example
-        const tsCode = `
-import axios from 'axios';
-
-const requestConfig = ${JSON.stringify(requestConfig, null, 2)};
-
-// Make the request
-try {
-  const response = await axios(requestConfig);
-  console.log('Response:', response.data);
-} catch (error) {
-  console.error('Error:', error.response?.data || error.message);
-}
-
-IMPORTANT: For the Pica secret always use the environment variable PICA_SECRET.
-`;
+        // Generate environment variable info
+        const envVars = {
+          PICA_SECRET: 'Your Pica secret key',
+          [`PICA_${platform.toUpperCase()}_CONNECTION_KEY`]: `Your ${platform} connection key (${connectionKey})`
+        };
 
         return {
           content: [{
             type: "text",
             text: JSON.stringify({
               success: true,
-              title: "Request config returned",
-              message: "Request config returned without execution. Use the TypeScript code below to make the HTTP request.",
-              requestConfig,
-              typeScriptCode: tsCode
+              title: "Production code configuration ready",
+              message: `Ready to generate real working code for ${action.title || 'action'}. Use the requestConfig below to create actual HTTP requests.`,
+              requestConfig: sanitizedRequestConfig,
+              environmentVariables: envVars,
+              actionKnowledge: action.knowledge,
+              suggestedLanguage: language || 'Ask user for preferred language',
+              codeGenerationInstructions: [
+                "Generate REAL, WORKING code using this exact requestConfig",
+                "Create actual HTTP requests, not demo/placeholder functions",
+                "Include proper error handling and response processing",
+                "Use environment variables for all secrets",
+                "Generate production-ready code that can be immediately used"
+              ],
+              exampleUsage: `
+// Example structure (adapt to chosen language):
+import axios from 'axios';
+
+const requestConfig = ${JSON.stringify(sanitizedRequestConfig, null, 2)};
+
+async function ${action.title ? action.title.replace(/\s+/g, '') : 'performAction'}() {
+  try {
+    const response = await axios(requestConfig);
+    return response.data;
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message);
+    throw error;
+  }
+}
+`
             }, null, 2)
           }]
         };
@@ -1070,14 +1094,35 @@ ${connectionsInfo}
 AVAILABLE PLATFORMS:
 ${availablePlatformsInfo}${envPrompt}
 
+INTENT DETECTION GUIDELINES:
+- EXECUTE IMMEDIATELY: "read my emails", "send an email now", "get my data", "create this now", "delete this item"
+- GENERATE CODE: "write code", "create code", "build an app", "implement", "write the code to", "show me how to code", "create a UI and write code", "build integration"
+- KEY RULE: If user mentions "code", "UI", "app", "implement", "build" → ALWAYS use generate_action_config_knowledge
+- If completely unclear, ask: "Would you like me to execute this action now, or generate code for you to use?"
+
+LANGUAGE DETECTION:
+- Detect programming language from context (file extensions, imports, etc.)
+- If unknown, ask the user for their preferred language
+- Support: TypeScript, JavaScript, Python, Go, PHP, etc.
+
+SECURITY REQUIREMENTS:
+- NEVER include actual secrets in generated code
+- Always use environment variables: PICA_SECRET and PICA_[PLATFORM]_CONNECTION_KEY
+- Inform users they must set these environment variables
+
+CODE GENERATION REQUIREMENTS:
+- Generate REAL, WORKING, PRODUCTION-READY code, not demo/placeholder code
+- Use the requestConfig from generate_action_config_knowledge to create actual HTTP requests
+- Include proper error handling and type definitions where available
+- DO NOT create demo components or placeholder functions - create actual implementations
+
 You can:
-1. Get available actions for any platform using getAvailableActions
-2. Get detailed knowledge about specific actions using getActionKnowledge  
-3. Generate request configurations (without executing) using execute
+1. Get available actions for any platform using get_available_actions
+2. Get detailed knowledge about specific actions using get_action_knowledge  
+3. Execute actions immediately using execute_action
+4. Generate integration code using generate_action_config_knowledge
 
 As a Knowledge Agent, you have enhanced understanding of API documentation and can provide detailed guidance on using various platforms and their APIs.
-
-When using the execute tool, you will receive a TypeScript code block showing how to make the HTTP request using the Pica Passthrough API.
 
 Always check what connections are available before attempting to use them.`;
 
@@ -1109,12 +1154,24 @@ ${connectionsInfo}
 AVAILABLE PLATFORMS:
 ${availablePlatformsInfo}
 
-You can:
-1. Get available actions for any platform using getAvailableActions
-2. Get detailed knowledge about specific actions using getActionKnowledge  
-3. Generate request configurations (without executing) using execute
+INTENT DETECTION:
+- EXECUTE IMMEDIATELY: "read my emails now", "send this message", "get my data"
+- GENERATE CODE: "write code", "create UI", "build app", "implement", "show me how to code"
+- CRITICAL: If user mentions "code", "UI", "app", "build", "create" → use generate_action_config_knowledge
+- When unclear, ask the user for clarification
 
-When using the execute tool, you will receive a TypeScript code block showing how to make the HTTP request using the Pica Passthrough API.
+CODE GENERATION RULES:
+- Generate REAL working code, not demos or placeholders
+- Use actual HTTP requests with proper error handling
+- Never include hardcoded secrets - use environment variables only
+
+SECURITY: Always use environment variables for secrets (PICA_SECRET, PICA_[PLATFORM]_CONNECTION_KEY)
+
+You can:
+1. Get available actions for any platform using get_available_actions
+2. Get detailed knowledge about specific actions using get_action_knowledge  
+3. Execute actions immediately using execute_action
+4. Generate integration code using generate_action_config_knowledge
 
 Always check what connections are available before attempting to use them.`;
 
